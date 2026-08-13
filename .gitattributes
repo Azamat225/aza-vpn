@@ -1,0 +1,7 @@
+*.sh text eol=lf
+deploy/bin/* text eol=lf
+*.py text eol=lf
+*.toml text eol=lf
+*.j2 text eol=lf
+*.md text eol=lf
+

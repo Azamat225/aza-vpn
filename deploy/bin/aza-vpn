@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+export PYTHONPATH="/opt/aza-vpn/app"
+exec /usr/bin/python3 -m aza_vpn.cli "$@"

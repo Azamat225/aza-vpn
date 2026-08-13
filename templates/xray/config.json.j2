@@ -1,0 +1,35 @@
+{
+  "log": {
+    "loglevel": {{ log_level }}
+  },
+  "inbounds": [
+    {
+      "tag": "vless-reality-in",
+      "listen": {{ listen_address }},
+      "port": {{ port }},
+      "protocol": "vless",
+      "settings": {
+        "clients": {{ clients }},
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "target": {{ reality_target }},
+          "xver": 0,
+          "serverNames": [{{ reality_server_name }}],
+          "privateKey": {{ reality_private_key }},
+          "shortIds": [{{ reality_short_id }}]
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "direct",
+      "protocol": "freedom"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aza-vpn"
+version = "0.1.0"
+description = "Small VLESS + REALITY + XTLS Vision management platform"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{name = "AZA VPN"}]
+dependencies = []
+
+[project.scripts]
+aza-vpn = "aza_vpn.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
