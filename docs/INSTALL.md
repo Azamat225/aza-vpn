@@ -81,13 +81,16 @@ native validation через `ExecStartPre`.
 
 The installer invokes the downloaded Xray binary directly. Its strict parser
 accepts the known label pairs `Private key / Public key`,
-`PrivateKey / PublicKey`, and `PrivateKey / Password / Hash32`. Labels are
-case-insensitive and tolerate horizontal whitespace. Missing, empty, unknown,
+`PrivateKey / PublicKey`, `PrivateKey / Password`, and
+`PrivateKey / Password (PublicKey) / Hash32`. Labels are case-insensitive and
+tolerate horizontal whitespace. The parenthetical alias is accepted only as
+`Password (PublicKey)`, not for arbitrary labels. Missing, empty, unknown,
 malformed, or conflicting fields stop installation without printing credential
 values.
 
-`Password` is the modern name of the client-side X25519 credential. `Hash32`
-is ignored and is never persisted. The private value remains server-only.
+`Password` and `Password (PublicKey)` are modern names of the client-side
+X25519 credential. `Hash32` is ignored and is never persisted. The private
+value remains server-only.
 
 ### Resume an interrupted install
 

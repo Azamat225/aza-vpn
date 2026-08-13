@@ -24,12 +24,27 @@ class KeyParserTests(unittest.TestCase):
     def test_parse_camel_case_labels(self) -> None:
         self.assert_pair(f"PrivateKey: {PRIVATE}\nPublicKey: {CLIENT}")
 
-    def test_parse_current_password_and_hash32_output(self) -> None:
-        self.assert_pair(f"PrivateKey: {PRIVATE}\nPassword: {CLIENT}\nHash32: {OTHER}")
+    def test_client_credential_label_variants_are_equivalent(self) -> None:
+        for label in ("Public key", "PublicKey", "Password", "Password (PublicKey)"):
+            with self.subTest(label=label):
+                self.assert_pair(f"PrivateKey: {PRIVATE}\n{label}: {CLIENT}")
+
+    def test_parse_current_password_public_key_alias_and_hash32_output(self) -> None:
+        self.assert_pair(
+            f"PrivateKey: {PRIVATE}\nPassword (PublicKey): {CLIENT}\nHash32: {OTHER}"
+        )
 
     def test_parse_crlf_case_and_whitespace_variations(self) -> None:
         self.assert_pair(
-            f"\tprivate KEY \t:  {PRIVATE}\r\n PASSWORD:\t{CLIENT}  \r\n hash32: {OTHER}\r\n"
+            f"\tprivate KEY \t:  {PRIVATE}\r\n"
+            f" password ( publickey ) :\t{CLIENT}  \r\n"
+            f" hash32: {OTHER}\r\n"
+        )
+
+    def test_password_alias_duplicate_with_same_value_is_allowed(self) -> None:
+        self.assert_pair(
+            f"PrivateKey: {PRIVATE}\nPassword: {CLIENT}\n"
+            f"Password (PublicKey): {CLIENT}\nHash32: {OTHER}"
         )
 
     def test_hash32_is_never_selected_as_client_key(self) -> None:
@@ -62,6 +77,8 @@ class KeyParserTests(unittest.TestCase):
         invalid_outputs = (
             f"PrivateKey: {PRIVATE}\nPrivate key: {OTHER}\nPassword: {CLIENT}",
             f"PrivateKey: {PRIVATE}\nPassword: {CLIENT}\nPassword: {OTHER}",
+            f"PrivateKey: {PRIVATE}\nPassword: {CLIENT}\n"
+            f"Password (PublicKey): {OTHER}",
             f"PrivateKey: {PRIVATE}\nPublicKey: {CLIENT}\nPassword: {OTHER}",
         )
         for output in invalid_outputs:
@@ -76,6 +93,16 @@ class KeyParserTests(unittest.TestCase):
         with self.assertRaises(XrayError) as context:
             parse_x25519_output(f"PrivateKey: {invalid_private}\nPassword: {CLIENT}")
         self.assertNotIn(invalid_private, str(context.exception))
+
+    def test_parenthetical_aliases_are_restricted_to_password_public_key(self) -> None:
+        invalid_outputs = (
+            f"PrivateKey (PublicKey): {PRIVATE}\nPassword: {CLIENT}",
+            f"PublicKey (Password): {CLIENT}\nPrivateKey: {PRIVATE}",
+            f"Password (Hash32): {CLIENT}\nPrivateKey: {PRIVATE}",
+        )
+        for output in invalid_outputs:
+            with self.subTest(output=output), self.assertRaisesRegex(XrayError, "unexpected"):
+                parse_x25519_output(output)
 
 
 if __name__ == "__main__":

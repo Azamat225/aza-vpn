@@ -41,7 +41,7 @@ flow. Не заменяйте REALITY public key/private key местами.
 The same client-side X25519 value has different field names at different
 boundaries:
 
-- modern `xray x25519` output: `Password`;
+- modern `xray x25519` output: `Password` or `Password (PublicKey)`;
 - older Xray output/state terminology: `PublicKey` / `public_key`;
 - current Xray outbound JSON: `password`;
 - compatible VLESS sharing URI: `pbk`.

@@ -20,9 +20,17 @@ from aza_vpn.utils.shell import run_command
 
 KEY_LINE_RE = re.compile(
     r"^[ \t]*(?P<label>[A-Za-z][A-Za-z0-9]*(?:[ \t]+[A-Za-z][A-Za-z0-9]*)*)"
+    r"(?:[ \t]*\([ \t]*(?P<alias>[A-Za-z][A-Za-z0-9]*"
+    r"(?:[ \t]+[A-Za-z][A-Za-z0-9]*)*)[ \t]*\))?"
     r"[ \t]*:[ \t]*(?P<value>\S*)[ \t]*$"
 )
-ALLOWED_X25519_LABELS = {"privatekey", "publickey", "password", "hash32"}
+X25519_FIELD_ALIASES = {
+    ("privatekey", None): "privatekey",
+    ("publickey", None): "publickey",
+    ("password", None): "password",
+    ("password", "publickey"): "password",
+    ("hash32", None): "hash32",
+}
 UUID_RE = re.compile(
     r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-"
     r"[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\b"
@@ -43,12 +51,17 @@ def _x25519_format_error(detail: str) -> XrayError:
     )
 
 
+def _normalize_x25519_label(value: str) -> str:
+    return re.sub(r"[ \t]+", "", value).lower()
+
+
 def parse_x25519_output(output: str) -> RealityKeyPair:
     """Parse only known Xray output schemas and deliberately discard Hash32.
 
-    Xray has named the client-side value ``Public key``, ``PublicKey``, and most
-    recently ``Password``.  Matching is case-insensitive and ignores whitespace
-    inside labels, but every non-empty output line must still be a known field.
+    Xray has named the client-side value ``Public key``, ``PublicKey``,
+    ``Password``, and ``Password (PublicKey)``. Matching is case-insensitive
+    and ignores whitespace inside labels, but every non-empty output line must
+    still be a known field or a known, field-specific alias.
     """
 
     fields: dict[str, str] = {}
@@ -60,16 +73,21 @@ def parse_x25519_output(output: str) -> RealityKeyPair:
         match = KEY_LINE_RE.fullmatch(line)
         if match is None:
             raise _x25519_format_error("malformed line")
-        label = re.sub(r"[ \t]+", "", match.group("label")).lower()
+        label = _normalize_x25519_label(match.group("label"))
+        alias = match.group("alias")
+        normalized_alias = _normalize_x25519_label(alias) if alias is not None else None
+        canonical_label = X25519_FIELD_ALIASES.get((label, normalized_alias))
         value = match.group("value")
-        if label not in ALLOWED_X25519_LABELS:
+        if canonical_label is None:
             raise _x25519_format_error("unexpected field")
         if not value:
-            raise _x25519_format_error(f"empty {label} field")
-        previous = fields.get(label)
+            raise _x25519_format_error(f"empty {canonical_label} field")
+        previous = fields.get(canonical_label)
         if previous is not None and previous != value:
-            raise _x25519_format_error(f"conflicting duplicate {label} field")
-        fields[label] = value
+            raise _x25519_format_error(
+                f"conflicting duplicate {canonical_label} field"
+            )
+        fields[canonical_label] = value
 
     if not saw_line or "privatekey" not in fields:
         raise _x25519_format_error("missing private key")

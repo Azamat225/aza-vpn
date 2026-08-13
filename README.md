@@ -196,9 +196,10 @@ Xray-сервер, systemd, UFW, apt и не проверяют внешние �
 
 AZA VPN treats the X25519 result as two semantic values: the server-only
 `private_key` and the client-side `client_key`. Supported Xray CLI schemas are
-`Private key / Public key`, `PrivateKey / PublicKey`, and
-`PrivateKey / Password / Hash32`. In the last schema `Password` is the client
-credential. `Hash32` is neither stored nor put in a URI.
+`Private key / Public key`, `PrivateKey / PublicKey`, `PrivateKey / Password`,
+and `PrivateKey / Password (PublicKey) / Hash32`. In the last schema
+`Password (PublicKey)` is the client credential. `Hash32` is neither stored
+nor put in a URI.
 
 Current Xray client JSON calls the client credential `password`, while the
 VLESS share-link convention used by v2rayNG, v2rayN, and Hiddify still calls
