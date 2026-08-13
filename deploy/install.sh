@@ -83,6 +83,16 @@ install -d -m 2750 -o root -g "$AZA_USER" "$AZA_ETC_DIR"
 install -d -m 0700 -o root -g root "$AZA_STATE_DIR"
 install -d -m 0750 -o "$AZA_USER" -g "$AZA_USER" "$AZA_LOG_DIR"
 
+# Older V0.1 builds used a suffix Xray cannot auto-detect as JSON. The verified
+# ownership marker makes this one fixed AZA-only cleanup path safe on resume.
+LEGACY_CANDIDATE="$AZA_ETC_DIR/config.json.new"
+if [[ "$INSTALL_MODE" == "recovery" && -e "$LEGACY_CANDIDATE" ]]; then
+    [[ -f "$LEGACY_CANDIDATE" && ! -L "$LEGACY_CANDIDATE" ]] || \
+        die "Legacy AZA candidate has an unsafe file type: $LEGACY_CANDIDATE"
+    rm -f -- "$LEGACY_CANDIDATE"
+    log "Removed stale legacy AZA candidate: $LEGACY_CANDIDATE"
+fi
+
 # The exact ownership marker was verified above, so replacing only our installed
 # Python package is safe and prevents stale modules after a resumed installation.
 rm -rf -- "$AZA_OPT_DIR/app/aza_vpn"

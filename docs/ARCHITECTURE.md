@@ -19,8 +19,8 @@ validate name
   -> xray uuid
   -> build new in-memory state
   -> write state atomically
-  -> render /etc/aza-vpn/config.json.new
-  -> xray run -test -config config.json.new
+  -> render /etc/aza-vpn/config.candidate.json
+  -> xray run -test -format=json -c config.candidate.json
   -> backup active config
   -> os.replace(candidate, active)
   -> systemctl restart aza-xray.service

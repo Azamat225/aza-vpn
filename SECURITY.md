@@ -45,7 +45,7 @@ tag из `aza-vpn status`, закоммитить только `.env.example` po
 
 ## Change safety
 
-- Каждый config проверяется штатным `xray run -test`.
+- Каждый JSON config проверяется штатным `xray run -test -format=json -c`.
 - Candidate не заменяет active config до success.
 - Active config backup + atomic rename + restart health check + rollback обязательны.
 - Deployment не использует config/binary x-ui и не меняет nginx/3x-ui.

@@ -160,7 +160,7 @@ sudo ./deploy/update.sh
 Config lifecycle:
 
 ```text
-config.json.new -> xray run -test -> config.json.bak -> atomic replace -> restart
+config.candidate.json -> xray run -test -format=json -c -> config.json.bak -> atomic replace -> restart
                                                          failure -> restore -> restart old
 ```
 
@@ -169,7 +169,7 @@ config.json.new -> xray run -test -> config.json.bak -> atomic replace -> restar
 ```bash
 sudo systemctl status aza-xray.service --no-pager
 sudo journalctl -u aza-xray.service -n 100 --no-pager
-sudo /opt/aza-vpn/xray/xray run -test -config /etc/aza-vpn/config.json
+sudo /opt/aza-vpn/xray/xray run -test -format=json -c /etc/aza-vpn/config.json
 sudo ls -l /etc/aza-vpn/config.json*
 ```
 

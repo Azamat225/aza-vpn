@@ -92,7 +92,7 @@ sudo aza-vpn client remove azamat
 ```
 
 `create` генерирует UUID командой установленного Xray, сохраняет клиента, создаёт candidate,
-проверяет его `xray run -test`, атомарно активирует и перезапускает только `aza-xray.service`.
+проверяет его `xray run -test -format=json -c`, атомарно активирует и перезапускает только `aza-xray.service`.
 После успеха CLI выводит URI для импорта. См. [CLIENTS.md](docs/CLIENTS.md).
 
 ## Status и диагностика

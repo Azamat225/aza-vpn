@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 import shutil
 import tempfile
@@ -13,7 +12,6 @@ from aza_vpn.clients.service import ClientService
 from aza_vpn.config import AppPaths
 from aza_vpn.errors import StateError
 from aza_vpn.models import RealitySecrets
-from aza_vpn.xray.validation import ConfigApplier
 
 
 UUID_ONE = "123e4567-e89b-42d3-a456-426614174000"
@@ -65,10 +63,6 @@ def initialize_repositories(paths: AppPaths) -> None:
     )
 
 
-def fake_apply(self: ConfigApplier, candidate: Path, **_: object) -> None:
-    os.replace(candidate, self.config_file)
-
-
 class ClientServiceTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
@@ -76,10 +70,13 @@ class ClientServiceTests(unittest.TestCase):
         self.paths = make_paths(Path(self.temporary.name))
         initialize_repositories(self.paths)
 
-    def test_create_and_remove_regenerate_config_atomically(self) -> None:
+    def test_create_and_remove_use_validator_and_json_candidate(self) -> None:
         with (
             patch("aza_vpn.clients.service.generate_client_uuid", return_value=UUID_ONE),
-            patch.object(ConfigApplier, "apply", fake_apply),
+            patch(
+                "aza_vpn.xray.validation.validate_xray_config", return_value="valid"
+            ) as validate,
+            patch("aza_vpn.xray.validation.restart_systemd_service"),
         ):
             service = ClientService(self.paths)
             client = service.create_client("azamat")
@@ -92,21 +89,42 @@ class ClientServiceTests(unittest.TestCase):
                 active["inbounds"][0]["settings"]["clients"][0]["email"], "azamat"
             )
 
+            self.assertEqual(validate.call_count, 1)
             removed = service.remove_client("azamat")
             self.assertEqual(removed, client)
             self.assertEqual(service.list_clients(), [])
             active = json.loads(self.paths.config_file.read_text(encoding="utf-8"))
             self.assertEqual(active["inbounds"][0]["settings"]["clients"], [])
+            self.assertEqual(validate.call_count, 2)
+            for call in validate.call_args_list:
+                self.assertTrue(call.args[1].name.endswith(".json"))
+                self.assertEqual(call.args[1].name, "config.candidate.json")
+            self.assertFalse((self.paths.config_file.parent / "config.json.new").exists())
 
     def test_duplicate_client_is_rejected(self) -> None:
         with (
             patch("aza_vpn.clients.service.generate_client_uuid", return_value=UUID_ONE),
-            patch.object(ConfigApplier, "apply", fake_apply),
+            patch("aza_vpn.xray.validation.validate_xray_config", return_value="valid"),
+            patch("aza_vpn.xray.validation.restart_systemd_service"),
         ):
             service = ClientService(self.paths)
             service.create_client("azamat")
             with self.assertRaisesRegex(StateError, "already exists"):
                 service.create_client("azamat")
+
+    def test_initialize_uses_validator_for_install_and_resume_paths(self) -> None:
+        with (
+            patch(
+                "aza_vpn.xray.validation.validate_xray_config", return_value="valid"
+            ) as validate,
+            patch("aza_vpn.xray.validation.restart_systemd_service"),
+        ):
+            service = ClientService(self.paths)
+            service.initialize(restart=True)
+            service.initialize(restart=True)
+        self.assertEqual(validate.call_count, 2)
+        for call in validate.call_args_list:
+            self.assertEqual(call.args[1].name, "config.candidate.json")
 
 
 if __name__ == "__main__":

@@ -17,6 +17,14 @@ def _redact(text: str, values: tuple[str, ...]) -> str:
     return redacted
 
 
+def candidate_path_for(config_file: Path) -> Path:
+    """Return the fixed same-directory JSON candidate path for an active config."""
+
+    if config_file.suffix.lower() != ".json":
+        raise XrayError("The active Xray config must use a .json filename.")
+    return config_file.with_name(f"{config_file.stem}.candidate.json")
+
+
 def validate_xray_config(
     xray_binary: Path,
     config_file: Path,
@@ -28,7 +36,7 @@ def validate_xray_config(
     if not config_file.is_file():
         raise XrayError(f"Xray config does not exist: {config_file}")
     result = run_command(
-        [str(xray_binary), "run", "-test", "-config", str(config_file)],
+        [str(xray_binary), "run", "-test", "-format=json", "-c", str(config_file)],
         timeout=30,
     )
     output = _redact("\n".join(part for part in (result.stdout, result.stderr) if part), redactions)

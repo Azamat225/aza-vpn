@@ -9,7 +9,7 @@ Type=simple
 User=aza-vpn
 Group=aza-vpn
 WorkingDirectory=/opt/aza-vpn/xray
-ExecStartPre=/opt/aza-vpn/xray/xray run -test -config /etc/aza-vpn/config.json
+ExecStartPre=/opt/aza-vpn/xray/xray run -test -format=json -c /etc/aza-vpn/config.json
 ExecStart=/opt/aza-vpn/xray/xray run -config /etc/aza-vpn/config.json
 Restart=on-failure
 RestartSec=5s

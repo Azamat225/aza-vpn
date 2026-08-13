@@ -13,7 +13,7 @@ from aza_vpn.models import Client, ClientState, RealitySecrets, RuntimeSettings,
 from aza_vpn.utils.files import atomic_write_text, exclusive_lock
 from aza_vpn.xray.generator import render_xray_config
 from aza_vpn.xray.keys import generate_client_uuid, generate_reality_secrets
-from aza_vpn.xray.validation import ConfigApplier, validate_xray_config
+from aza_vpn.xray.validation import ConfigApplier, candidate_path_for, validate_xray_config
 
 
 class ClientService:
@@ -137,7 +137,7 @@ class ClientService:
         restart: bool,
     ) -> None:
         rendered = render_xray_config(self.paths.template_file, settings, secrets_value, state)
-        candidate = self.paths.config_file.with_name(f"{self.paths.config_file.name}.new")
+        candidate = candidate_path_for(self.paths.config_file)
         atomic_write_text(candidate, rendered, mode=0o640)
         ConfigApplier(
             self.paths.xray_binary,
