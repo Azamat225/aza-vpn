@@ -7,7 +7,8 @@ from aza_vpn.clients.uri import VlessUri
 
 
 TEST_UUID = "123e4567-e89b-42d3-a456-426614174000"
-TEST_PUBLIC_KEY = "B" * 43
+TEST_CLIENT_KEY = "B" * 43
+TEST_PRIVATE_KEY = "A" * 43
 
 
 class VlessUriTests(unittest.TestCase):
@@ -17,7 +18,7 @@ class VlessUriTests(unittest.TestCase):
             address="203.0.113.10",
             port=18443,
             server_name="www.example.com",
-            public_key=TEST_PUBLIC_KEY,
+            client_key=TEST_CLIENT_KEY,
             short_id="a1b2c3d4e5f60708",
             fingerprint="chrome",
             label="Germany 01 / azamat #1",
@@ -37,12 +38,13 @@ class VlessUriTests(unittest.TestCase):
                 "security": ["reality"],
                 "sni": ["www.example.com"],
                 "fp": ["chrome"],
-                "pbk": [TEST_PUBLIC_KEY],
+                "pbk": [TEST_CLIENT_KEY],
                 "sid": ["a1b2c3d4e5f60708"],
                 "type": ["tcp"],
             },
         )
         self.assertNotIn("private", uri.lower())
+        self.assertNotIn(TEST_PRIVATE_KEY, uri)
         self.assertNotIn("/etc/", uri)
 
     def test_brackets_ipv6_address(self) -> None:
@@ -51,7 +53,7 @@ class VlessUriTests(unittest.TestCase):
             address="2001:db8::10",
             port=8443,
             server_name="example.com",
-            public_key=TEST_PUBLIC_KEY,
+            client_key=TEST_CLIENT_KEY,
             short_id="0011",
             fingerprint="chrome",
             label="ipv6",

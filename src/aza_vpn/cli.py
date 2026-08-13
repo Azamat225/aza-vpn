@@ -127,7 +127,7 @@ def _status(paths: AppPaths) -> None:
     print(f"Server label: {settings.server_label}")
     print(f"Reality server name: {settings.reality_server_name}")
     print(f"Reality target: {settings.reality_dest}")
-    print(f"Reality public key/password: {secrets_value.public_key}")
+    print(f"Reality client key/password: {secrets_value.client_key}")
     print(f"Reality shortId: {secrets_value.short_id}")
 
 

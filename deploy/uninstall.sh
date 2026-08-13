@@ -16,7 +16,7 @@ done
 
 require_root
 require_supported_linux
-[[ -f "$AZA_MARKER" ]] || die "AZA VPN marker is missing; refusing to delete any path."
+require_aza_marker
 
 PORT="unknown"
 if [[ -f "$AZA_ETC_DIR/aza-vpn.env" ]]; then

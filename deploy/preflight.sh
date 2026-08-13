@@ -45,7 +45,14 @@ if (( ALLOW_AZA_PORT == 0 )); then
     }
     log "TCP port $AZA_VLESS_PORT: free"
 else
-    log "TCP port occupancy check: allowed only for the existing AZA service during update"
+    if port_is_free "$AZA_VLESS_PORT"; then
+        log "TCP port $AZA_VLESS_PORT: free"
+    elif aza_service_owns_tcp_port "$AZA_VLESS_PORT"; then
+        log "TCP port $AZA_VLESS_PORT: occupied by the dedicated AZA Xray service"
+    else
+        ss -lntup 2>/dev/null || true
+        die "TCP port $AZA_VLESS_PORT is occupied by a process other than the managed AZA service."
+    fi
 fi
 
 detect_existing_services
@@ -75,4 +82,3 @@ else
 fi
 
 log "Preflight passed. No existing service or firewall configuration was modified."
-

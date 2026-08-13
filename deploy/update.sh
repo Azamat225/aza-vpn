@@ -26,7 +26,9 @@ done
 
 require_root
 require_supported_linux
-[[ -f "$AZA_MARKER" ]] || die "AZA VPN managed installation marker is missing."
+require_aza_marker
+[[ -f "$AZA_INSTALL_RECORD" ]] || \
+    die "AZA VPN installation is incomplete. Resume it with deploy/install.sh."
 [[ -f "$AZA_ETC_DIR/aza-vpn.env" ]] || die "Installed environment file is missing."
 
 load_env_file "$AZA_ETC_DIR/aza-vpn.env"
@@ -122,4 +124,3 @@ log "Requested Xray: $XRAY_VERSION"
 log "Installed Xray: $RESOLVED_XRAY_VERSION"
 log "Architecture: $(uname -m)/$ARTIFACT_ARCH"
 log "Update complete; existing nginx, x-ui, Docker, Redis, and other services were not modified."
-

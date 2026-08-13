@@ -9,10 +9,29 @@ readonly AZA_LOG_DIR="/var/log/aza-vpn"
 readonly AZA_SERVICE="aza-xray.service"
 readonly AZA_USER="aza-vpn"
 readonly AZA_MARKER="/opt/aza-vpn/.aza-vpn-managed"
+readonly AZA_MARKER_VALUE="aza-vpn-v0.1"
+readonly AZA_INSTALL_RECORD="/var/lib/aza-vpn/install.json"
 
 log() { printf '[aza-vpn] %s\n' "$*"; }
 warn() { printf '[aza-vpn] WARNING: %s\n' "$*" >&2; }
 die() { printf '[aza-vpn] ERROR: %s\n' "$*" >&2; exit 1; }
+
+require_aza_marker() {
+    [[ -f "$AZA_MARKER" ]] || die "AZA VPN managed installation marker is missing."
+    local marker_value
+    marker_value="$(tr -d '\r' < "$AZA_MARKER")"
+    [[ "$marker_value" == "$AZA_MARKER_VALUE" ]] || \
+        die "AZA VPN marker has unexpected content; refusing to modify managed paths."
+}
+
+managed_account_matches() {
+    command -v getent >/dev/null 2>&1 || return 1
+    local record user_home user_shell
+    record="$(getent passwd "$AZA_USER")" || return 1
+    user_home="$(cut -d: -f6 <<< "$record")"
+    user_shell="$(cut -d: -f7 <<< "$record")"
+    [[ "$user_home" == "$AZA_STATE_DIR" && "$user_shell" == */nologin ]]
+}
 
 trim() {
     local value="$*"
@@ -89,6 +108,17 @@ map_xray_architecture() {
 port_is_free() {
     local port="$1"
     ! ss -H -lnt "sport = :$port" 2>/dev/null | grep -q .
+}
+
+aza_service_owns_tcp_port() {
+    local port="$1"
+    command -v systemctl >/dev/null 2>&1 || return 1
+    local main_pid executable
+    main_pid="$(systemctl show --property MainPID --value "$AZA_SERVICE" 2>/dev/null)" || return 1
+    [[ "$main_pid" =~ ^[1-9][0-9]*$ ]] || return 1
+    executable="$(readlink -f "/proc/$main_pid/exe" 2>/dev/null)" || return 1
+    [[ "$executable" == "$AZA_OPT_DIR/xray/xray" ]] || return 1
+    ss -H -lntp "sport = :$port" 2>/dev/null | grep -Fq "pid=$main_pid,"
 }
 
 check_reality_destination() {

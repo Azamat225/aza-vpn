@@ -82,7 +82,9 @@ def parse_env_file(path: Path) -> dict[str, str]:
         elif value.startswith(("'", '"')) or value.endswith(("'", '"')):
             raise ConfigurationError(f"Mismatched quotes on environment line {line_number}.")
         if "\x00" in value or "\n" in value or "\r" in value:
-            raise ConfigurationError(f"Invalid control character on environment line {line_number}.")
+            raise ConfigurationError(
+                f"Invalid control character on environment line {line_number}."
+            )
         result[key] = value
     return result
 
@@ -94,4 +96,3 @@ def load_settings(paths: AppPaths, environ: Mapping[str, str] | None = None) -> 
         if key in overrides:
             values[key] = overrides[key]
     return RuntimeSettings.from_mapping(values)
-

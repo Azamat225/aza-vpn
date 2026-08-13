@@ -58,7 +58,7 @@ def initialize_repositories(paths: AppPaths) -> None:
     SecretRepository(paths.secrets_file).save_new(
         RealitySecrets(
             private_key="A" * 43,
-            public_key="B" * 43,
+            client_key="B" * 43,
             short_id="a1b2c3d4e5f60708",
             created_at="2026-01-01T00:00:00+00:00",
         )
@@ -86,6 +86,7 @@ class ClientServiceTests(unittest.TestCase):
             self.assertEqual(client.uuid, UUID_ONE)
             self.assertEqual(service.get_client("azamat"), client)
             self.assertIn("vless://", service.uri_for(client))
+            self.assertNotIn("A" * 43, service.uri_for(client))
             active = json.loads(self.paths.config_file.read_text(encoding="utf-8"))
             self.assertEqual(
                 active["inbounds"][0]["settings"]["clients"][0]["email"], "azamat"
@@ -110,4 +111,3 @@ class ClientServiceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

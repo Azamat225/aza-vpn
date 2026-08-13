@@ -15,14 +15,14 @@ class VlessUri:
     address: str
     port: int
     server_name: str
-    public_key: str
+    client_key: str
     short_id: str
     fingerprint: str
     label: str
 
     def build(self) -> str:
         user_id = validate_uuid(self.uuid)
-        validate_key(self.public_key, "Reality public key/password")
+        validate_key(self.client_key, "Reality client key/password")
         validate_short_id(self.short_id)
         if not 1 <= self.port <= 65535:
             raise ValueError("VLESS URI port must be between 1 and 65535.")
@@ -38,7 +38,9 @@ class VlessUri:
                 ("security", "reality"),
                 ("sni", self.server_name),
                 ("fp", self.fingerprint),
-                ("pbk", self.public_key),
+                # Share-link clients still use ``pbk`` even though current Xray
+                # outbound JSON calls this same value ``password``.
+                ("pbk", self.client_key),
                 ("sid", self.short_id),
                 # Sharing links conventionally call the RAW TCP transport "tcp".
                 ("type", "tcp"),
@@ -48,4 +50,3 @@ class VlessUri:
         )
         fragment = quote(self.label, safe="")
         return f"vless://{user_id}@{address}:{self.port}?{query}#{fragment}"
-

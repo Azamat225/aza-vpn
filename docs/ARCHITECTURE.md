@@ -31,6 +31,15 @@ validate name
 Операции защищены exclusive lock. Atomic rename выполняется внутри того же filesystem/directory.
 Backup хранит private key и наследует `0640`.
 
+## Reality key boundary
+
+`xray.keys` converts version-dependent CLI labels into
+`RealityKeyPair(private_key, client_key)`. Persistent secrets use the same
+semantic `client_key` name but can read the V0.1 legacy `public_key` property.
+The server template consumes only `private_key`; the VLESS URI builder receives
+only `client_key` and serializes it as ecosystem-compatible `pbk`. `Hash32` is
+discarded at the parser boundary.
+
 ## Xray server config
 
 Один inbound:
@@ -56,4 +65,3 @@ filesystem нет. Код откатывает оба при обрабатыв�
 инструкций между state replace и config replace может потребовать `sudo aza-vpn config apply` для
 повторной синхронизации. Это ограничение локального JSON backend; database transaction появится в
 будущем control plane.
-

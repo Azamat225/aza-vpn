@@ -19,7 +19,9 @@ def render_strict_template(template: str, values: Mapping[str, Any]) -> str:
     missing = placeholders - values.keys()
     unused = values.keys() - placeholders
     if missing:
-        raise ConfigurationError("Xray template is missing values for: " + ", ".join(sorted(missing)))
+        raise ConfigurationError(
+            "Xray template is missing values for: " + ", ".join(sorted(missing))
+        )
     if unused:
         raise ConfigurationError("Xray renderer has unused values: " + ", ".join(sorted(unused)))
 
@@ -72,4 +74,3 @@ def render_xray_config(
             "reality_short_id": secrets.short_id,
         },
     )
-

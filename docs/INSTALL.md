@@ -77,6 +77,36 @@ shortId создаётся Python `secrets.token_hex(8)` (16 hex characters). X2
 Перед первым `systemctl start` install выполняет `aza-vpn config validate`; unit повторяет
 native validation через `ExecStartPre`.
 
+### X25519 output compatibility
+
+The installer invokes the downloaded Xray binary directly. Its strict parser
+accepts the known label pairs `Private key / Public key`,
+`PrivateKey / PublicKey`, and `PrivateKey / Password / Hash32`. Labels are
+case-insensitive and tolerate horizontal whitespace. Missing, empty, unknown,
+malformed, or conflicting fields stop installation without printing credential
+values.
+
+`Password` is the modern name of the client-side X25519 credential. `Hash32`
+is ignored and is never persisted. The private value remains server-only.
+
+### Resume an interrupted install
+
+An exact `.aza-vpn-managed` marker proves ownership of the managed paths;
+`/var/lib/aza-vpn/install.json` proves that installation reached an active
+service. If a previous run failed before the completion record (for example,
+while parsing `xray x25519`), update the repository and rerun:
+
+```bash
+git pull --ff-only
+sudo ./deploy/preflight.sh
+sudo ./deploy/install.sh
+```
+
+No `rm`, uninstall, nginx/x-ui stop, or cleanup is required. A resumed install
+validates the marker/account, accepts an occupied configured port only when it
+belongs to `/opt/aza-vpn/xray/xray`, regenerates missing managed state, validates
+the candidate, and writes the completion record only after the service is active.
+
 ## 4. Firewall opt-in
 
 По умолчанию никакое правило не добавляется. Если UFW active:

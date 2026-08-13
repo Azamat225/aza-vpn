@@ -57,7 +57,11 @@ class ClientService:
             old_state = self.clients.load()
             if name in old_state.clients:
                 raise StateError(f"Client already exists: {name}")
-            client = Client(name=name, uuid=generate_client_uuid(self.paths.xray_binary), created_at=utc_now())
+            client = Client(
+                name=name,
+                uuid=generate_client_uuid(self.paths.xray_binary),
+                created_at=utc_now(),
+            )
             new_clients = dict(old_state.clients)
             new_clients[name] = client
             new_state = replace(old_state, clients=new_clients)
@@ -87,7 +91,7 @@ class ClientService:
             address=settings.server_address,
             port=settings.port,
             server_name=settings.reality_server_name,
-            public_key=secrets_value.public_key,
+            client_key=secrets_value.client_key,
             short_id=secrets_value.short_id,
             fingerprint=settings.reality_fingerprint,
             label=f"{settings.server_label} - {client.name}",
@@ -140,4 +144,3 @@ class ClientService:
             self.paths.config_file,
             self.paths.service_name,
         ).apply(candidate, restart=restart, redactions=(secrets_value.private_key,))
-

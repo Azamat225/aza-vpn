@@ -3,7 +3,7 @@
 V0.1 выдаёт sharing URI вида:
 
 ```text
-vless://<UUID>@<ADDRESS>:<PORT>?encryption=none&flow=xtls-rprx-vision&security=reality&sni=<SNI>&fp=<FP>&pbk=<PUBLIC>&sid=<SHORT_ID>&type=tcp#<LABEL>
+vless://<UUID>@<ADDRESS>:<PORT>?encryption=none&flow=xtls-rprx-vision&security=reality&sni=<SNI>&fp=<FP>&pbk=<CLIENT_KEY>&sid=<SHORT_ID>&type=tcp#<LABEL>
 ```
 
 Query и fragment кодируются через стандартный URL encoder. В URI нет private key, server paths,
@@ -36,6 +36,28 @@ sudo aza-vpn client remove azamat
 import откройте профиль и сверьте address, port, UUID, SNI, public key, shortId, fingerprint и
 flow. Не заменяйте REALITY public key/private key местами.
 
+## REALITY client credential naming
+
+The same client-side X25519 value has different field names at different
+boundaries:
+
+- modern `xray x25519` output: `Password`;
+- older Xray output/state terminology: `PublicKey` / `public_key`;
+- current Xray outbound JSON: `password`;
+- compatible VLESS sharing URI: `pbk`.
+
+AZA VPN stores it internally as `client_key` and reads legacy `public_key`
+state for compatibility. v2rayNG source, v2rayN share-link examples, and the
+Hiddify URL scheme use `pbk`. HAPP should be checked with the installed client
+version. `Hash32` and the server private key are never placed in the URI.
+
+Format references checked for this compatibility decision:
+
+- [current Xray REALITY client field](https://xtls.github.io/en/config/transports/reality.html);
+- [v2rayNG URI parser/serializer source](https://github.com/2dust/v2rayNG/blob/master/V2rayNG/app/src/main/java/com/v2ray/ang/fmt/FmtBase.kt);
+- [Hiddify URL scheme](https://github.com/hiddify/hiddify-app/wiki/URL-Scheme);
+- [v2rayN VLESS REALITY share-link example](https://github.com/2dust/v2rayN/issues/7135).
+
 ## Import
 
 1. Выполните `sudo aza-vpn client show <name>` в доверенной admin session.
@@ -52,4 +74,3 @@ V0.1 не генерирует QR, не отправляет URI по сети �
 режим. Конкретные названия переключателей зависят от приложения. Split routing российских
 назначений и split DNS пока не реализованы проектом; нельзя считать V0.1 выполнением будущей
 схемы always-on `RU → DIRECT / OTHER → PROXY`.
-

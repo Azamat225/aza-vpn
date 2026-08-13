@@ -10,6 +10,15 @@
 - Backup с `/etc/aza-vpn` содержит private key и должен иметь `0600`, храниться зашифрованно или
   в доверенном root-only месте.
 
+## X25519 parser boundary
+
+Xray CLI output is treated as untrusted structured input. Only known field
+labels are accepted; key encodings, required values, empty values, duplicate
+conflicts, and unknown lines are checked fail-closed. Error messages describe
+the field class but never echo a credential. `Hash32` has no storage or URI
+path. The private key is redacted from native validation diagnostics and is
+never passed into the URI builder.
+
 ## Cryptography
 
 Проект не реализует X25519, VLESS, REALITY, TLS, XTLS или QUIC. UUID генерируется `xray uuid`,
@@ -54,4 +63,3 @@ tag из `aza-vpn status`, закоммитить только `.env.example` po
 
 Обычно безопасны `systemctl status`, journal (после просмотра), Xray version и exit code native
 validation. Проверьте текст вручную: сторонние ошибки могут включать values из config.
-

@@ -83,7 +83,9 @@ def _validate_server_name(value: str) -> str:
         ipaddress.ip_address(candidate)
     except ValueError:
         return candidate.rstrip(".")
-    raise ConfigurationError("REALITY_SERVER_NAME must be a DNS name accepted by the target certificate.")
+    raise ConfigurationError(
+        "REALITY_SERVER_NAME must be a DNS name accepted by the target certificate."
+    )
 
 
 def _parse_target(value: str) -> tuple[str, int]:
@@ -209,21 +211,40 @@ class Client:
 @dataclass(frozen=True, slots=True)
 class RealitySecrets:
     private_key: str
-    public_key: str
+    client_key: str
     short_id: str
     created_at: str
 
     def __post_init__(self) -> None:
         validate_key(self.private_key, "Reality private key")
-        validate_key(self.public_key, "Reality public key/password")
+        validate_key(self.client_key, "Reality client key/password")
         validate_short_id(self.short_id)
+
+    @property
+    def public_key(self) -> str:
+        """Compatibility alias for callers reading V0.1 state terminology."""
+
+        return self.client_key
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> RealitySecrets:
         try:
+            has_current_key = "client_key" in data
+            has_legacy_key = "public_key" in data
+            if not has_current_key and not has_legacy_key:
+                raise KeyError("client_key")
+            if (
+                has_current_key
+                and has_legacy_key
+                and str(data["client_key"]) != str(data["public_key"])
+            ):
+                raise StateError(
+                    "Secrets file contains conflicting client_key and public_key values."
+                )
+            selected_key = data["client_key"] if has_current_key else data["public_key"]
             return cls(
                 private_key=str(data["private_key"]),
-                public_key=str(data["public_key"]),
+                client_key=str(selected_key),
                 short_id=str(data["short_id"]),
                 created_at=str(data["created_at"]),
             )
@@ -231,7 +252,12 @@ class RealitySecrets:
             raise StateError(f"Secrets file is missing {exc.args[0]!r}.") from exc
 
     def to_dict(self) -> dict[str, str]:
-        return asdict(self)
+        return {
+            "private_key": self.private_key,
+            "client_key": self.client_key,
+            "short_id": self.short_id,
+            "created_at": self.created_at,
+        }
 
 
 @dataclass(slots=True)

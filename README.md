@@ -192,6 +192,32 @@ Xray-сервер, systemd, UFW, apt и не проверяют внешние �
 - [Official releases](https://github.com/XTLS/Xray-core/releases)
 - [Official installer checksum workflow](https://github.com/XTLS/Xray-install/blob/main/install-release.sh)
 
+## Xray 26.x key naming and interrupted install recovery
+
+AZA VPN treats the X25519 result as two semantic values: the server-only
+`private_key` and the client-side `client_key`. Supported Xray CLI schemas are
+`Private key / Public key`, `PrivateKey / PublicKey`, and
+`PrivateKey / Password / Hash32`. In the last schema `Password` is the client
+credential. `Hash32` is neither stored nor put in a URI.
+
+Current Xray client JSON calls the client credential `password`, while the
+VLESS share-link convention used by v2rayNG, v2rayN, and Hiddify still calls
+the URI parameter `pbk`. AZA VPN therefore maps Xray CLI `Password` to URI
+`pbk`; it never maps `Hash32` or `PrivateKey` there. HAPP compatibility must be
+confirmed with the exact app/core version during the device test plan.
+
+`/opt/aza-vpn/.aza-vpn-managed` is an ownership marker. A successful install
+is recorded separately in `/var/lib/aza-vpn/install.json`, and only after the
+dedicated service is active. If `install.sh` was interrupted after creating
+managed files but before that completion record, rerun the same command:
+
+```bash
+sudo ./deploy/install.sh
+```
+
+It verifies the marker and dedicated account, then replaces/resumes only AZA
+managed files and state. Do not delete the partial installation first.
+
 ## Roadmap
 
 - **V0.1** — VLESS + Reality + Vision + RAW/TCP; CLI, deployment, client URI.
