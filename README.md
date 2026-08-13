@@ -16,6 +16,7 @@ Xray, клиентами, конфигурацией и deployment. Сущест
 
 Реализованы:
 
+
 - отдельный Xray в `/opt/aza-vpn/xray/xray`;
 - отдельный `aza-xray.service` и непривилегированный пользователь `aza-vpn`;
 - CLI для create/list/show/remove клиентов и status;
